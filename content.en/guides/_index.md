@@ -3,10 +3,13 @@ title: "Guides"
 weight: 20
 ---
 
-Deep dives and practical recipes.
+Practical guides for the most important Llamatik workflows.
 
+- Text generation
 - Embeddings
-- Text generation and context
 - Streaming
+- Generation parameters
 - Schema-constrained JSON
-- Tuning generation parameters
+- KV cache and sessions
+- Stable Diffusion image generation
+- Whisper speech-to-text

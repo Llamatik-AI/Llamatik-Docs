@@ -2,9 +2,10 @@
 title: "Installation"
 weight: 1
 ---
-## Gradle (Kotlin DSL)
 
-Add the dependency to the module where you want to use Llamatik:
+## Gradle dependency
+
+Add the library to the module where you want to use Llamatik.
 
 ```kotlin
 dependencies {
@@ -12,9 +13,9 @@ dependencies {
 }
 ```
 
-### Kotlin Multiplatform
+## Kotlin Multiplatform
 
-In a KMP module, add it to the relevant source sets:
+In a KMP project, add the dependency to the source sets that need it.
 
 ```kotlin
 kotlin {
@@ -28,18 +29,38 @@ kotlin {
 }
 ```
 
-### Android notes
+## Platform notes
 
-- **Min SDK:** 26 (Android 8.0)
-- Llamatik loads a native library at runtime on Android.
-- Put your `.gguf` model under `app/src/main/assets/` and use `getModelPath(...)` (see Quickstart).
+### Android
 
-### iOS notes
+- **Min SDK:** 26
+- The library loads native code at runtime.
+- If you package models in assets, make sure your app can resolve or copy them to a readable file path before initialization.
 
-- **Minimum iOS deployment target:** 16.6
-- Llamatik is distributed as a Kotlin/Native framework via KMP. If you hit linking issues, see Troubleshooting → iOS.
+### iOS
 
-### Desktop / JVM notes
+- **Minimum deployment target:** 16.6
+- The library is consumed through Kotlin Multiplatform / Kotlin Native integration.
+- Model files need to be bundled or downloaded in a way your app can resolve to an actual file path.
 
-- Requires a recent JDK (the repo uses toolchain 21).
-- The JVM target loads the native library (`llama_jni`) on startup.
+### JVM / Desktop
+
+- Use a recent JDK. The repository is configured around toolchain 21.
+- Native libraries are loaded from packaged resources.
+- Model paths are usually absolute disk paths.
+
+### WASM
+
+- Text generation is available through the WASM implementation.
+- Embeddings, Stable Diffusion, Whisper, and KV session persistence are currently not available.
+- If you rely on streaming or worker-only execution, prefer the streaming APIs.
+
+## What to install beyond the dependency
+
+Llamatik gives you the native bridge. You still need compatible model files:
+
+- `LlamaBridge`: GGUF text models, and GGUF embedding models for `initEmbedModel`
+- `StableDiffusionBridge`: a compatible Stable Diffusion model file
+- `WhisperBridge`: a compatible Whisper model file
+
+The next page explains how to think about model selection.

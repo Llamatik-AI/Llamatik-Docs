@@ -2,29 +2,24 @@
 title: "Schema-constrained JSON"
 weight: 5
 ---
-Llamatik can generate **valid JSON** and (optionally) constrain it to a **JSON Schema**.
 
-This is useful for:
-- typed outputs you can parse into Kotlin data classes
-- calling tools / functions from structured responses
-- building reliable pipelines (no “almost JSON”)
+Llamatik can ask the model to return JSON and optionally constrain it to a JSON Schema.
+This is one of the most useful features when you want AI output to plug into typed application logic.
 
-## Basic JSON generation (no schema)
+## Basic JSON generation
 
 ```kotlin
 val json = LlamaBridge.generateJson(
-  prompt = "Return a JSON object with fields: name (string), year (int)."
+    prompt = "Return a JSON object with fields: name (string), year (int)."
 )
 println(json)
 ```
 
-## Constrain to a JSON Schema
-
-Pass a schema string to `jsonSchema`.
+## JSON Schema constrained generation
 
 ```kotlin
-val schema = """{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+val schema = """
+{
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -32,11 +27,12 @@ val schema = """{
     "year": { "type": "integer" }
   },
   "required": ["name", "year"]
-}"""
+}
+""".trimIndent()
 
 val json = LlamaBridge.generateJson(
-  prompt = "Generate an example object.",
-  jsonSchema = schema
+    prompt = "Generate an example object.",
+    jsonSchema = schema
 )
 ```
 
@@ -44,25 +40,31 @@ val json = LlamaBridge.generateJson(
 
 ```kotlin
 val json = LlamaBridge.generateJsonWithContext(
-  systemPrompt = "You output only JSON.",
-  contextBlock = "The product is Llamatik.",
-  userPrompt = "Return product metadata.",
-  jsonSchema = schema
+    systemPrompt = "You output only JSON.",
+    contextBlock = "The product is Llamatik.",
+    userPrompt = "Return product metadata.",
+    jsonSchema = schema
 )
 ```
 
 ## Streaming JSON
 
-If you want incremental output:
-
 ```kotlin
 LlamaBridge.generateJsonStream(
-  prompt = "Return JSON for a grocery list with 3 items.",
-  jsonSchema = schema,
-  callback = object : GenStream { /* ... */ }
+    prompt = "Return JSON for a grocery list with 3 items.",
+    jsonSchema = schema,
+    callback = object : GenStream {
+        override fun onDelta(text: String) = print(text)
+        override fun onComplete() = println("\nDone")
+        override fun onError(message: String) = println("Error: $message")
+    }
 )
 ```
 
-### Parsing
+## Why this matters
 
-Once you get the string, parse it with your JSON library of choice (Kotlinx Serialization, Moshi, Jackson, etc.).
+Schema-constrained output reduces brittle post-processing and makes it easier to parse results with Kotlin serialization libraries.
+It is especially useful for:
+- forms and extraction
+- tool calling style outputs
+- strongly typed app workflows

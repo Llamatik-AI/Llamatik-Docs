@@ -2,27 +2,53 @@
 title: "Models"
 weight: 3
 ---
-Llamatik uses **GGUF** models (the standard file format used by `llama.cpp`).
 
-## Picking a model
+Model selection has the biggest impact on speed, memory usage, and output quality.
 
-- Choose a model that has a **GGUF** release.
-- Choose a **quantization** that matches your device constraints:
-  - Smaller quantizations run faster and use less memory, with some quality tradeoff.
-  - Larger quantizations can be higher quality but require more RAM.
+## LlamaBridge models
 
-## Where to get GGUF models
+For text generation and embeddings, Llamatik works with **GGUF** models.
 
-Common places include Hugging Face model pages that provide `.gguf` files.
+### Text generation
+Choose an instruction-tuned GGUF model when building chat, assistants, extraction, or summarization features.
 
-## Recommended first tests
+### Embeddings
+Use a model specifically intended for embeddings when calling `initEmbedModel(...)` and `embed(...)`.
+Do not assume your generation model is a good embedding model.
 
-- Tiny/mini models (very small) to validate that your build + loading works.
-- Then move to your target model size/quality once everything is stable.
+## Quantization
 
-## Shipping models
+GGUF models are often distributed in multiple quantizations.
+The tradeoff is straightforward:
 
-Models can be large. Consider:
-- **Android:** ship a smaller default model, or download on first run.
-- **iOS:** Apple size limits apply; use on-demand resources or download after install.
-- **Desktop:** bundle or download, depending on your distribution model.
+- smaller quantizations: lower memory use, faster inference, lower quality
+- larger quantizations: higher memory use, slower inference, often better quality
+
+A good development strategy is:
+
+1. start with a small quantized model to validate your integration
+2. move to a larger target model once everything is working
+
+## Stable Diffusion models
+
+For `StableDiffusionBridge`, use a model compatible with the native backend used by the library.
+Since image generation is heavier than text generation, start with conservative image sizes and settings while validating performance.
+
+## Whisper models
+
+For `WhisperBridge`, choose a model size that matches your latency and accuracy goals.
+Smaller models are faster and lighter; larger models are usually more accurate.
+
+## Shipping strategy
+
+Models can be large, so most apps choose one of these approaches:
+
+- bundle a small default model
+- download models after installation
+- let advanced users choose which models to download
+
+## Practical advice
+
+- Keep one model per task at first: one text model, one embedding model, one Whisper model, one image model.
+- Reuse initialized models rather than loading them repeatedly.
+- Test on real target hardware, especially for mobile image generation.
