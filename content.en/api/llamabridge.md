@@ -12,6 +12,8 @@ It exposes a compact API for:
 - JSON and JSON Schema constrained output
 - generation parameter tuning
 - KV cache reuse and session persistence
+- model introspection (finetune type, chat template)
+- concurrent independent sessions via `LlamaSession`
 
 Under the hood, the actual implementation is platform-specific, but the public API stays the same.
 
@@ -260,6 +262,68 @@ Important notes:
 - On WASM, session persistence is currently not implemented.
 - If no active session exists yet, `generateContinue()` behaves like a fresh generation.
 
+## Model introspection
+
+```kotlin
+fun getModelFinetuneType(): String?
+fun getModelChatTemplate(): String?
+fun applyChatTemplate(messages: List<Pair<String, String>>, addAssistantPrefix: Boolean): String?
+```
+
+### `getModelFinetuneType()`
+Returns the `general.finetune` key embedded in the GGUF metadata, such as `"instruct"` or `"chat"`, or `null` if the field is not present.
+Useful when deciding whether a model needs a chat template applied.
+
+```kotlin
+val type = LlamaBridge.getModelFinetuneType()
+println(type) // e.g. "instruct"
+```
+
+### `getModelChatTemplate()`
+Returns the Jinja-style chat template embedded in the GGUF file, or `null` if none is present.
+The template describes how messages should be formatted into a prompt string for that model.
+
+```kotlin
+val template = LlamaBridge.getModelChatTemplate()
+```
+
+### `applyChatTemplate(messages, addAssistantPrefix)`
+Formats a list of `(role, content)` message pairs using the model's embedded chat template and returns the final prompt string.
+Pass `addAssistantPrefix = true` to append the assistant turn prefix (e.g. `<|assistant|>`) so the model knows to continue from that role.
+
+```kotlin
+val messages = listOf(
+    "system" to "You are a concise assistant.",
+    "user" to "What is KMP?"
+)
+val prompt = LlamaBridge.applyChatTemplate(messages, addAssistantPrefix = true)
+if (prompt != null) {
+    LlamaBridge.generateStream(prompt, callback)
+}
+```
+
+## Concurrent sessions
+
+```kotlin
+fun createSession(): LlamaSession?
+```
+
+### `createSession()`
+Creates an independent `LlamaSession` with its own KV cache and cancel flag.
+Returns `null` if no generation model is loaded.
+Multiple sessions can stream concurrently on separate threads.
+
+```kotlin
+val sessionA = LlamaBridge.createSession() ?: error("model not loaded")
+val sessionB = LlamaBridge.createSession() ?: error("model not loaded")
+
+// Stream concurrently
+thread { sessionA.stream("Describe the moon", callback) }
+thread { sessionB.stream("Describe the sun", callback) }
+```
+
+See [LlamaSession]({{< relref "llamasession" >}}) for the full session API.
+
 ## Runtime controls
 
 ```kotlin
@@ -270,6 +334,11 @@ fun updateGenerateParams(
     topP: Float,
     topK: Int,
     repeatPenalty: Float,
+    contextLength: Int,
+    numThreads: Int,
+    useMmap: Boolean,
+    flashAttention: Boolean,
+    batchSize: Int,
 )
 fun shutdown()
 ```
@@ -288,8 +357,26 @@ LlamaBridge.updateGenerateParams(
     topP = 0.95f,
     topK = 40,
     repeatPenalty = 1.1f,
+    contextLength = 4096,
+    numThreads = 4,
+    useMmap = true,
+    flashAttention = false,
+    batchSize = 512,
 )
 ```
+
+### Parameters
+
+- `temperature`: controls randomness. Lower values give more deterministic output.
+- `maxTokens`: maximum number of tokens to generate per call.
+- `topP`: nucleus sampling probability mass. Typically 0.9–0.95.
+- `topK`: restricts sampling to the top K tokens at each step.
+- `repeatPenalty`: penalizes repeated tokens. 1.0 means no penalty.
+- `contextLength`: the model's context window size in tokens.
+- `numThreads`: number of CPU threads for inference. Pass `-1` to use the platform default.
+- `useMmap`: whether to use memory-mapped file I/O for the model weights.
+- `flashAttention`: enables Flash Attention when supported by the backend.
+- `batchSize`: prompt processing batch size. Larger values can improve throughput on long prompts.
 
 ### `shutdown()`
 Releases native resources when you are done with the bridge.

@@ -30,6 +30,19 @@ expect object StableDiffusionBridge {
         cfgScale: Float = 7.0f,
         seed: Long = -1L,
     ): ByteArray
+    fun img2img(
+        initImageRgba: ByteArray,
+        initImageW: Int,
+        initImageH: Int,
+        prompt: String,
+        negativePrompt: String? = null,
+        width: Int = 512,
+        height: Int = 512,
+        steps: Int = 20,
+        cfgScale: Float = 7.0f,
+        strength: Float = 0.75f,
+        seed: Long = -1L,
+    ): ByteArray
     fun release()
 }
 ```
@@ -102,6 +115,44 @@ check(rgba.isNotEmpty())
 // Convert width/height/RGBA bytes into a platform image type
 ```
 
+## `img2img(...)`
+Generates an image using an existing image as the starting point, guided by a text prompt.
+This is useful for style transfer, inpainting workflows, or iterating on an existing image.
+
+```kotlin
+val sourceRgba: ByteArray = /* your RGBA source image bytes */
+val rgba = StableDiffusionBridge.img2img(
+    initImageRgba = sourceRgba,
+    initImageW = 512,
+    initImageH = 512,
+    prompt = "A watercolor painting of the same scene",
+    negativePrompt = "low quality, blurry",
+    width = 512,
+    height = 512,
+    steps = 20,
+    cfgScale = 7.0f,
+    strength = 0.75f,
+    seed = 42L,
+)
+```
+
+### Parameters
+
+- `initImageRgba`: the source image as a raw RGBA byte array (`width * height * 4` bytes)
+- `initImageW` / `initImageH`: dimensions of the source image
+- `prompt`: text describing the desired output
+- `negativePrompt`: what the model should avoid
+- `width` / `height`: output image size in pixels
+- `steps`: number of diffusion steps
+- `cfgScale`: prompt adherence strength
+- `strength`: how much the source image influences the result. `0.0` preserves the original entirely; `1.0` ignores it. Values around `0.6–0.8` work well for most style transfers.
+- `seed`: controls reproducibility. Use `-1L` for non-deterministic behavior.
+
+### Return value
+
+Returns an RGBA `ByteArray` of size `width * height * 4`.
+Returns an empty array on failure.
+
 ## `release()`
 Frees the native Stable Diffusion context.
 
@@ -116,4 +167,5 @@ Call this when you are done with image generation or when the feature is being t
 - Start with `512x512`, `steps = 20`, `cfgScale = 7.0f`.
 - Use a negative prompt for better consistency when quality matters.
 - Reuse one initialized model for multiple generations instead of loading it every time.
+- For `img2img`, ensure your source RGBA byte array is correctly sized (`initImageW * initImageH * 4`).
 - Expect significant CPU and memory use on mobile devices.

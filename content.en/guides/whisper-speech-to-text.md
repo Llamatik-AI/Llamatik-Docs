@@ -28,6 +28,22 @@ println(text)
 
 The `language` parameter is optional, but supplying it can improve reliability when you already know the input language.
 
+## Initial prompt
+
+The `initialPrompt` parameter primes the model before transcription begins.
+Use it to bias output toward specific vocabulary, domain terms, or formatting conventions.
+
+```kotlin
+val text = WhisperBridge.transcribeWav(
+    wavPath = audioPath,
+    language = "en",
+    initialPrompt = "The following is a developer podcast about Kotlin Multiplatform."
+)
+```
+
+The model uses the prompt as prior context — it does not transcribe it literally.
+This is useful when your audio contains technical terms or proper nouns that the model might otherwise mis-transcribe.
+
 ## Recommended workflow
 
 1. record or obtain audio

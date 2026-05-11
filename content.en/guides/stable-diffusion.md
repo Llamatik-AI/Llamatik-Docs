@@ -33,12 +33,43 @@ val rgba = StableDiffusionBridge.txt2img(
 The output is an RGBA `ByteArray`.
 To display it, convert the bytes into your platform image type using the same width and height you requested.
 
+## Image-to-image generation
+
+`img2img` generates a new image starting from an existing one, guided by a text prompt.
+The source image must be provided as a raw RGBA byte array.
+
+```kotlin
+val sourceRgba: ByteArray = /* existing image bytes as RGBA */
+val result = StableDiffusionBridge.img2img(
+    initImageRgba = sourceRgba,
+    initImageW = 512,
+    initImageH = 512,
+    prompt = "The same scene as a watercolor painting",
+    negativePrompt = "low quality, blurry",
+    width = 512,
+    height = 512,
+    steps = 20,
+    cfgScale = 7.0f,
+    strength = 0.75f,
+    seed = 1234L,
+)
+```
+
+The `strength` parameter controls how much the source image is preserved:
+
+- `0.0` leaves the image almost unchanged
+- `1.0` ignores the source entirely and acts like `txt2img`
+- values around `0.6–0.8` are a good starting point for style transfers
+
+Make sure the `initImageRgba` array contains exactly `initImageW * initImageH * 4` bytes.
+
 ## Parameter guidance
 
 - `width` and `height`: start with `512x512` unless you have benchmarked larger values
 - `steps`: around 20 is a good mobile-friendly default
 - `cfgScale`: around 7.0 to 8.0 is a common starting range
 - `seed`: use a fixed value for reproducible results
+- `strength` (`img2img` only): start around 0.75 and adjust to taste
 
 ## Performance advice
 

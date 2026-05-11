@@ -21,7 +21,11 @@ Current support in the library code:
 expect object WhisperBridge {
     fun getModelPath(modelFileName: String): String
     fun initModel(modelPath: String): Boolean
-    fun transcribeWav(wavPath: String, language: String? = null): String
+    fun transcribeWav(
+        wavPath: String,
+        language: String? = null,
+        initialPrompt: String? = null,
+    ): String
     fun release()
 }
 ```
@@ -43,13 +47,14 @@ check(ok) { "Failed to initialize Whisper model" }
 
 Call this once before transcription.
 
-## `transcribeWav(wavPath, language)`
+## `transcribeWav(wavPath, language, initialPrompt)`
 Transcribes a WAV audio file into text.
 
 ```kotlin
 val text = WhisperBridge.transcribeWav(
     wavPath = "/path/to/sample.wav",
-    language = "en"
+    language = "en",
+    initialPrompt = "The following is a technical discussion about Kotlin."
 )
 println(text)
 ```
@@ -57,9 +62,8 @@ println(text)
 ### Parameters
 
 - `wavPath`: path to the WAV file to transcribe
-- `language`: optional language hint such as `"en"`, `"es"`, or `"fr"`
-
-If you already know the language, providing it can improve predictability and reduce ambiguity.
+- `language`: optional language hint such as `"en"`, `"es"`, or `"fr"`. Providing it improves predictability and reduces ambiguity when you already know the input language.
+- `initialPrompt`: optional text to prime the model before transcription begins. Use this to bias the output toward specific vocabulary, domain terms, or formatting conventions. The model treats this as prior context without transcribing it literally.
 
 ### Return value
 

@@ -11,5 +11,7 @@ Practical guides for the most important Llamatik workflows.
 - Generation parameters
 - Schema-constrained JSON
 - KV cache and sessions
+- Concurrent sessions
 - Stable Diffusion image generation
 - Whisper speech-to-text
+- Multimodal vision (VLM)
