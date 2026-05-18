@@ -17,15 +17,19 @@ Use `LlamaSession` when:
 
 ## Create a session
 
-Sessions are created from `LlamaBridge` after the generation model is loaded:
+Sessions are created from `LlamaBridge` after the generation model is loaded.
+Pass a `name` string to give the session a human-readable label:
 
 ```kotlin
 LlamaBridge.initGenerateModel(modelPath)
 
-val session = LlamaBridge.createSession()
+val session = LlamaBridge.createSession(name = "My chat")
     ?: error("sessions not supported on this platform")
+
+println(session.name) // "My chat"
 ```
 
+The `name` parameter is optional and defaults to an empty string.
 Each call returns a new independent session with a fresh KV cache.
 
 ## Stream from a session
@@ -49,8 +53,8 @@ session.stream(
 ```kotlin
 LlamaBridge.initGenerateModel(modelPath)
 
-val sessionA = LlamaBridge.createSession() ?: error("not supported")
-val sessionB = LlamaBridge.createSession() ?: error("not supported")
+val sessionA = LlamaBridge.createSession(name = "Forest") ?: error("not supported")
+val sessionB = LlamaBridge.createSession(name = "City") ?: error("not supported")
 
 val threadA = thread {
     sessionA.stream("Describe a forest at dawn.", callbackA)

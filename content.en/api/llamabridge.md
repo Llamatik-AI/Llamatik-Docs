@@ -14,6 +14,7 @@ It exposes a compact API for:
 - KV cache reuse and session persistence
 - model introspection (finetune type, chat template)
 - concurrent independent sessions via `LlamaSession`
+- Multi-Token Prediction (MTP) for faster speculative generation
 
 Under the hood, the actual implementation is platform-specific, but the public API stays the same.
 
@@ -314,8 +315,8 @@ Returns `null` if no generation model is loaded.
 Multiple sessions can stream concurrently on separate threads.
 
 ```kotlin
-val sessionA = LlamaBridge.createSession() ?: error("model not loaded")
-val sessionB = LlamaBridge.createSession() ?: error("model not loaded")
+val sessionA = LlamaBridge.createSession(name = "Thread A") ?: error("model not loaded")
+val sessionB = LlamaBridge.createSession(name = "Thread B") ?: error("model not loaded")
 
 // Stream concurrently
 thread { sessionA.stream("Describe the moon", callback) }
@@ -381,3 +382,40 @@ LlamaBridge.updateGenerateParams(
 ### `shutdown()`
 Releases native resources when you are done with the bridge.
 In long-lived apps this is usually called when the feature or process is shutting down, not after every request.
+
+## Multi-Token Prediction (MTP)
+
+```kotlin
+fun initMtp(modelPath: String, draftLen: Int = 3): Boolean
+fun shutdownMtp()
+```
+
+### `initMtp(modelPath, draftLen)`
+Loads the MTP head from the same GGUF used for generation and activates speculative drafting.
+Must be called after `initGenerateModel()`.
+
+Returns `true` if the model contains MTP layers and the head context was created successfully.
+Returns `false` if the model has no MTP layers or loading fails — generation continues normally at standard speed.
+
+```kotlin
+LlamaBridge.initGenerateModel(modelPath)
+
+val ok = LlamaBridge.initMtp(modelPath, draftLen = 3)
+// ok == false just means MTP is unavailable for this model; not a fatal error
+```
+
+- **`modelPath`**: same path passed to `initGenerateModel()` — the MTP layers are embedded in the same file.
+- **`draftLen`**: maximum speculative tokens per step (1–8 recommended). Default is 3.
+
+MTP is transparent to all streaming generation calls once enabled.
+See [Multi-Token Prediction]({{< relref "/guides/multi-token-prediction" >}}) for the full guide.
+
+### `shutdownMtp()`
+Releases the MTP draft context and disables speculative drafting.
+The trunk model stays loaded and generation continues at normal speed.
+
+```kotlin
+LlamaBridge.shutdownMtp()
+```
+
+`shutdown()` also releases MTP resources automatically.

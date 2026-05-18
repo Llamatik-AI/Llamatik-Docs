@@ -15,3 +15,4 @@ Practical guides for the most important Llamatik workflows.
 - Stable Diffusion image generation
 - Whisper speech-to-text
 - Multimodal vision (VLM)
+- Multi-Token Prediction (MTP)

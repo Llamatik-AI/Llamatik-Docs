@@ -19,6 +19,7 @@ Create sessions via `LlamaBridge.createSession()`. Dispose with `close()` when d
 
 ```kotlin
 expect class LlamaSession {
+    val name: String
     fun stream(prompt: String, callback: GenStream)
     fun cancel()
     fun close()
@@ -27,15 +28,19 @@ expect class LlamaSession {
 
 ## Creating a session
 
-Sessions are created from `LlamaBridge` after a generation model has been loaded:
+Sessions are created from `LlamaBridge` after a generation model has been loaded.
+Pass a human-readable name to identify the session in your UI:
 
 ```kotlin
 LlamaBridge.initGenerateModel(modelPath)
 
-val session = LlamaBridge.createSession()
+val session = LlamaBridge.createSession(name = "Chat #1")
     ?: error("model not loaded or sessions not supported on this platform")
+
+println(session.name) // "Chat #1"
 ```
 
+The `name` parameter is optional and defaults to an empty string.
 Each call to `createSession()` returns a new independent session.
 
 ## `stream(prompt, callback)`
@@ -75,8 +80,8 @@ session.close()
 ```kotlin
 LlamaBridge.initGenerateModel(modelPath)
 
-val sessionA = LlamaBridge.createSession() ?: error("not supported")
-val sessionB = LlamaBridge.createSession() ?: error("not supported")
+val sessionA = LlamaBridge.createSession(name = "Forest") ?: error("not supported")
+val sessionB = LlamaBridge.createSession(name = "City") ?: error("not supported")
 
 val threadA = thread {
     sessionA.stream("Describe a forest at dawn.", callbackA)
