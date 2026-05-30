@@ -340,6 +340,7 @@ fun updateGenerateParams(
     useMmap: Boolean,
     flashAttention: Boolean,
     batchSize: Int,
+    gpuLayers: Int = 0,
 )
 fun shutdown()
 ```
@@ -363,6 +364,7 @@ LlamaBridge.updateGenerateParams(
     useMmap = true,
     flashAttention = false,
     batchSize = 512,
+    gpuLayers = 0,
 )
 ```
 
@@ -378,6 +380,7 @@ LlamaBridge.updateGenerateParams(
 - `useMmap`: whether to use memory-mapped file I/O for the model weights.
 - `flashAttention`: enables Flash Attention when supported by the backend.
 - `batchSize`: prompt processing batch size. Larger values can improve throughput on long prompts.
+- `gpuLayers`: transformer layers to offload to the GPU. `0` = CPU only (default), `-1` = all layers (Metal / CUDA / Vulkan), `N` = exactly N layers. Requires a model reload. Ignored on WASM.
 
 ### `shutdown()`
 Releases native resources when you are done with the bridge.

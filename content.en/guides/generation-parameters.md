@@ -17,6 +17,7 @@ LlamaBridge.updateGenerateParams(
     useMmap = true,
     flashAttention = false,
     batchSize = 512,
+    gpuLayers = 0,
 )
 ```
 
@@ -70,6 +71,19 @@ The batch size used during prompt processing (the prefill phase).
 Larger values can improve throughput on long prompts at the cost of memory.
 A value of `512` works well for most use cases.
 
+### gpuLayers
+The number of transformer layers to offload to the GPU accelerator.
+
+- `0` — all computation runs on CPU (default)
+- `-1` — all layers are offloaded to GPU (Metal on iOS/macOS, CUDA or Vulkan on Android/JVM where supported)
+- `N` (positive integer) — exactly N layers are offloaded; the rest remain on CPU
+
+Offloading more layers increases throughput significantly on devices with a capable GPU.
+Start with `-1` to offload everything, then reduce if you hit memory limits.
+
+This parameter requires a model reload to take effect.
+On WASM, `gpuLayers` is silently ignored — there is no GPU offload path in the WebAssembly target.
+
 ## Tuning advice
 
 - Start from moderate values and test on a fixed prompt set.
@@ -78,3 +92,5 @@ A value of `512` works well for most use cases.
 - For brainstorming or creative tasks, slightly higher temperature can help.
 - For long chat history, increase `contextLength` and consider enabling `flashAttention`.
 - If memory is tight on mobile, reduce `batchSize` and `contextLength`.
+- On Metal-capable iOS/macOS devices, set `gpuLayers = -1` to offload all layers and gain significant throughput.
+- On Android with a CUDA or Vulkan-capable GPU, the same `-1` value applies; fall back to a specific layer count if you hit OOM errors.
