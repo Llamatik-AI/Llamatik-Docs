@@ -6,7 +6,12 @@ weight: 6
 KV cache reuse is one of the most important performance features for chat-like experiences.
 Instead of rebuilding the full prompt state from scratch for every turn, the model can continue from what it has already processed.
 
-## Core methods
+There are two ways to use the KV cache:
+
+- **`LlamaSession`** — for streaming multi-turn conversations. Each session owns an isolated KV cache that persists across `stream()` calls. This is the recommended approach for chat UIs.
+- **Global session methods** — for non-streaming multi-turn generation via `generateContinue()`, with optional disk persistence via `sessionSave()`/`sessionLoad()`.
+
+## Core methods (global, non-streaming)
 
 ```kotlin
 LlamaBridge.sessionReset()
@@ -72,11 +77,39 @@ LlamaBridge.sessionReset()
 
 This is useful when the user starts a new conversation but you want to keep the model loaded.
 
+## Streaming multi-turn chat with KV continuity
+
+For streaming conversations, use `LlamaSession` instead of the global methods.
+Each `session.stream(...)` call appends the new prompt tokens to the session's existing KV cache,
+so the model retains full memory of previous turns.
+
+```kotlin
+LlamaBridge.initGenerateModel(modelPath)
+
+val session = LlamaBridge.createSession(name = "chat")
+    ?: error("sessions not supported on this platform")
+
+// Turn 1
+session.stream("What is Kotlin?", callback)
+
+// Turn 2 — model remembers what was said in turn 1
+session.stream("Give me an example of a coroutine.", callback)
+
+// Explicitly reset the KV state when the conversation is over
+session.close()
+```
+
+The global `LlamaBridge.generateStream(...)` is stateless and does not carry KV context across calls.
+Use `LlamaSession` whenever the model must remember previous turns while streaming.
+
+See [Concurrent Sessions]({{< relref "concurrent-sessions" >}}) for running multiple independent sessions in parallel.
+
 ## Important limitations
 
-- Session persistence is currently unavailable on WASM.
-- Session files should be used with the same model setup that created them.
+- Session persistence (`sessionSave`/`sessionLoad`) is currently unavailable on WASM.
+- Session files must be used with the same model that created them.
 - If no active session exists, `generateContinue(...)` falls back to fresh generation behavior.
+- `LlamaSession` is not supported on WASM — use `LlamaBridge.generateStream(...)` there instead.
 
 ## When this feature is worth using
 
@@ -84,6 +117,7 @@ Use KV sessions when:
 - you are building a chat app
 - the user asks follow-up questions
 - you want faster continuation across turns
+- you are streaming and need the model to remember previous turns
 
 Skip it when:
 - every request is independent
