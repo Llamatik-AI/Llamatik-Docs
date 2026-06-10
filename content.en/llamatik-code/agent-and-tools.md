@@ -12,9 +12,22 @@ The Llamatik Code agent is a tool-driven loop that takes a natural-language inst
 1. You type an instruction in **Agent mode**.
 2. The agent makes a first LLM pass to produce a plan.
 3. It executes each step by calling one or more tools.
-4. Results are fed back into the loop until the task is complete.
+4. Results are fed back into the loop (up to 5 rounds) until the task is complete.
 5. File writes are shown as a **diff preview** — you approve before changes land on disk.
 6. After apply, the agent optionally triggers a build and interprets errors.
+
+### Attaching files
+
+Use `@filename` in your prompt to attach a file directly. The agent pre-seeds attached files into its context so the model never re-reads them via `read_file` — this prevents wasted rounds and ensures the file content is always available at full fidelity.
+
+### Loop reliability (1.8.0+)
+
+The agent applies several safeguards to ensure it always produces a file change when one is needed:
+
+- **Dedup guard** — `read_file`, `search_code`, and `list_files` calls are tracked across all rounds. A duplicate call returns an instant synthetic result instead of consuming a round slot.
+- **All-duplicate escalation** — if every tool call in a round is a synthetic dedup result, the agent skips immediately to a final write pass.
+- **Mid-loop prose escalation** — if the model writes plain text instead of a tool call after reading files, the agent forces a final write pass rather than treating the prose as the answer.
+- **Thinking suppressed on the final round** — the model's full token budget goes to the `write_file` output on the last round.
 
 ## Built-in tools (available since 1.2.0)
 

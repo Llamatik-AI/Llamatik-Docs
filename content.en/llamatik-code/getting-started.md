@@ -59,11 +59,20 @@ All inference runs locally by default. No data is sent to Llamatik servers. If y
 | Single-session agent | Yes | Yes |
 | Multi-task agent | — | Yes |
 | Parallel chat sessions | Yes | Yes |
+| Multi-file apply | Yes | Yes |
+| Auto-build after apply | Yes | Yes |
+| Max tokens per response | 65 536 | 65 536 |
+| Context size setting | Yes | Yes |
+| Image attachments | 5 per session | Unlimited |
+| Skills | 3 active | Unlimited |
 | MCP servers | 1 (manual approval) | Unlimited + auto-approval |
 | Aggressive mode | — | Yes |
-| Multi-file apply | — | Yes |
-| Auto-build + auto-fix | — | Yes |
-| External Knowledge | 5 searches/day, 1 docs source | 50 searches/day, 10 sources |
+| Auto-fix ("Fix it automatically") | Yes | Yes |
+| External Knowledge | 15 searches/day, 3 docs sources, 5 pages/task | 50 searches/day, 10 sources, 10 pages/task |
 | Code Health Monitor | LIGHT / manual only | BALANCED + AGGRESSIVE + background |
+| Enterprise missions (current file / selection / git diff) | Yes | Yes |
+| Enterprise missions (directory / module scope) | — | Yes |
+| Before-commit enterprise review | — | Yes |
+| Inline completions | Yes | Yes |
 
 Upgrade at [llamatik.com](https://www.llamatik.com).
