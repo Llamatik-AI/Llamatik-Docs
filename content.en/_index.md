@@ -11,13 +11,26 @@ bookFlatSection: true
 - Offline inference via bundled native bindings
 - Embeddings + text generation + streaming
 - **Schema‑constrained JSON generation** (optional JSON Schema → valid JSON output)
+- **v2.0** — `:sdk` module, Agent Framework DSL, Agent Platform runtime
+
+## What's new in v2.0
+
+| Feature | Module |
+|---|---|
+| Clean SDK module with zero UI dependencies | `com.llamatik:sdk` |
+| `Assistant` facade — single injectable class for all inference | `com.llamatik:sdk` |
+| `Agent { }` Kotlin DSL — streaming, memory, tools, workflows | `com.llamatik:sdk` |
+| Agent Platform — runtime, permissions, companion profiles, audit | `com.llamatik:sdk-agent` |
+
+→ **[Migration Guide](migration/)** for upgrading from 1.x
 
 ## Quick links
 
 - **Getting started:** head to [Installation](getting-started/installation/) and [Quickstart](getting-started/quickstart/)
-- **Guides:** embeddings, generation, streaming, JSON mode
-- **API reference:** `LlamaBridge` and `GenStream`
+- **Guides:** [SDK overview](guides/sdk-overview/), [Agent Framework](guides/agent-framework/), [Agent Platform](guides/agent-platform/), embeddings, streaming, JSON mode
+- **API reference:** `LlamaBridge`, `GenStream`, SDK types
 - **Troubleshooting:** common build/linking pitfalls (especially iOS)
+- **Legacy (v1.x):** [v1.x documentation](v1-legacy/)
 
 ## Llamatik Code — IntelliJ Plugin
 

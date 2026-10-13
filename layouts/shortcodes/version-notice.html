@@ -1,0 +1,7 @@
+{{ $version := .Get 0 | default "v1.x" }}
+{{ $current := .Get 1 | default "/docs/" }}
+<div class="book-hint warning" style="margin-bottom:1.5rem;">
+  <strong>⚠️ Legacy documentation ({{ $version }})</strong><br/>
+  You are viewing the <strong>{{ $version }}</strong> legacy docs.
+  <a href="{{ $current }}">View the current v2.0 documentation →</a>
+</div>
